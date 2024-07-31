@@ -1,0 +1,42 @@
+name: Fetch Data Daily
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs every day at 12:00 AM
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Fetch data using curl
+        run: |
+          curl 'https://dttguide.nbtc.go.th/BcsEpgDataServices/BcsEpgDataController/getProgramDataWeb' \
+            -H 'accept: */*' \
+            -H 'accept-language: en,th;q=0.9,en-US;q=0.8' \
+            -H 'content-type: application/json; charset=UTF-8' \
+            -H 'cookie: BIGipServerPool_Port_80=2705199532.20480.0000; OptanonConsent=isGpcEnabled=0&datestamp=Wed+Jul+31+2024+13%3A21%3A20+GMT%2B0700+(Indochina+Time)&version=202210.1.0&isIABGlobal=false&hosts=&consentId=ffc6df78-4b41-462d-81cc-f330a9669618&interactionCount=1&landingPath=https%3A%2F%2Fwww.nbtc.go.th%2FNews%2FPurchase%2F%25E0%25B8%259B%25E0%25B8%25A3%25E0%25B8%25B0%25E0%25B8%2581%25E0%25B8%25A7%25E0%25B8%2594%25E0%25B8%25A3%25E0%25B8%25B2%25E0%25B8%2584%25E0%25B8%25B2%2F%25E0%25B8%259C%25E0%25B8%25B1%25E0%25B8%2587%25E0%25B8%25A3%25E0%25B8%25B2%25E0%25B8%25A2%25E0%25B8%2581%25E0%25B8%25B2%25E0%25B8%25A3%25E0%25B9%2582%25E0%25B8%2597%25E0%25B8%25A3%25E0%25B8%2597%25E0%25B8%25B1%25E0%25B8%25A8%25E0%25B8%2599%25E0%25B9%258C%25E0%25B9%2583%25E0%25B8%2599%25E0%25B8%25A3%25E0%25B8%25B0%25E0%25B8%259A%25E0%25B8%25B8%25E0%25B8%2594%25E0%25B8%25B4%25E0%25B8%2588%25E0%25B8%25B4%25E0%25B8%2595%25E0%25B8%25AD%25E0%25B8%25A5-(Electronic-Program.aspx&groups=C0001%3A1%2CC0003%3A0%2CC0002%3A0%2CC0004%3A0' \
+            -H 'origin: https://dttguide.nbtc.go.th' \
+            -H 'priority: u=1, i' \
+            -H 'referer: https://dttguide.nbtc.go.th/dttguide/' \
+            -H 'sec-ch-ua: "Not)A;Brand";v="99", "Microsoft Edge";v="127", "Chromium";v="127"' \
+            -H 'sec-ch-ua-mobile: ?0' \
+            -H 'sec-ch-ua-platform: "Windows"' \
+            -H 'sec-fetch-dest: empty' \
+            -H 'sec-fetch-mode: cors' \
+            -H 'sec-fetch-site: same-origin' \
+            -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0' \
+            --data-raw '{"channelType":"1"}' -o data.json
+
+      - name: Commit and push data
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add data.json
+          git commit -m "Daily data fetch $(date +'%Y-%m-%d %H:%M')"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
