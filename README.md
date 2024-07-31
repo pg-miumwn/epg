@@ -1,9 +1,9 @@
 ![Static Badge](https://img.shields.io/badge/version-1.0-blue?style=for-the-badge)
 ### Readme
-Repositories นี้ไม่ได้ทำขึ้นเพื่อละเมิดลิขสิทธิ์ใดๆ แต่ทำขึ้นเพื่อระบบอัตโนมัติเพื่อดึงข้อมูลจาก [DTT GUIDE](https://dttguide.nbtc.go.th/dttguide/) 
-มาทำแคชเก็บไว้ **วันต่อวัน** เพื่อทำให้ใช้ข้อมูล EPG *Electronic program guide* สามารถเข้าถึงได้ด้วยความเร็วที่เพิ่มมากขึ้น
+This repositories are not made to infringe any copyrights, but are made for the automatic system to extract data from [DTT GUIDE](#)
+to make a cache to keep **day by day** to make the EPG data accessible with increased speed.
 
-โดย ใน Repositories นี้จะมีแค่ข้อมูลดิบ ที่ยังไม่ผ่านการประมวลผลเท่านั้น
+In this repositories, there will only be raw data that has not been processed.
 
 ### License
-ท่านสามารถนำข้อมูลไปประมวลผลเพื่อใช้งานต่อได้ หรือ สามารถนำข้อมูลไปใช้ต่อได้ทันที โดยไม่มีลิขสิทธิ์ใดๆ
+You can process the data for further use or can use the data immediately without any copyright.
