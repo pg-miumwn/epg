@@ -31,7 +31,7 @@ jobs:
             -H 'sec-fetch-site: same-origin' \
             -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0' \
             --data-raw '{"channelType":"1"}' | \
-          jq '[.results[] | select(.channelNo | tonumber == 33 or tonumber == 31 or tonumber == 25)]' > data.json
+          jq -c '[.results[] | select(.channelNo | tonumber == 33 or tonumber == 31 or tonumber == 25)]' > data.json
 
       - name: Commit and push data
         id: commit
