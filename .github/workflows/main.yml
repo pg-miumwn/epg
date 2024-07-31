@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Fetch data using curl
+      - name: Fetch data using curl and filter with jq
         run: |
           curl 'https://dttguide.nbtc.go.th/BcsEpgDataServices/BcsEpgDataController/getProgramDataWeb' \
             -H 'accept: */*' \
@@ -30,7 +30,8 @@ jobs:
             -H 'sec-fetch-mode: cors' \
             -H 'sec-fetch-site: same-origin' \
             -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0' \
-            --data-raw '{"channelType":"1"}' -o data.json
+            --data-raw '{"channelType":"1"}' | \
+          jq '[.results[] | select(.channelNo | tonumber == 33 or tonumber == 31 or tonumber == 25)]' > data.json
 
       - name: Commit and push data
         id: commit
@@ -42,7 +43,7 @@ jobs:
             echo "No changes to commit"
             echo "::set-output name=skip_deploy::true"
           else
-            git commit -m "Daily data fetch $(date +'%Y-%m-%d %H:%M')"
+            git commit -m "Weekly data fetch $(date +'%Y-%m-%d %H:%M')"
             git push
             echo "::set-output name=skip_deploy::false"
           fi
