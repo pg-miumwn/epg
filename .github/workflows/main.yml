@@ -2,7 +2,7 @@ name: Fetch Data Weekly
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs every Monday at 12:00 AM
+    - cron: '0 17 * * *'  # Runs every Monday at 12:00 AM
   workflow_dispatch:
 
 jobs:
