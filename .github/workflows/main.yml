@@ -42,7 +42,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "skip_deploy=true" >> $GITHUB_STATE
           else
-            git commit -m "Weekly data fetch $(date +'%Y-%m-%d %H:%M')"
+            git commit -m "[BOT]Every other day data fetch: at $(date +'%Y-%m-%d %H:%M')"
             git push
             echo "skip_deploy=false" >> $GITHUB_STATE
           fi
