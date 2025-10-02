@@ -6,6 +6,9 @@ on:
     - cron: '0 17 * * 0,2,4,6'
   # Allows manual running from the Actions tab
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   fetch-data:
