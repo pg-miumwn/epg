@@ -1,4 +1,4 @@
-name: Fetch Data Weekly
+name: Fetch DTT Guide Weekly
 
 on:
   schedule:
@@ -21,12 +21,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install playwright
+          pip install playwright playwright-stealth
           playwright install
 
       - name: Run fetch script
         run: |
-          python fetch.py
+          python fetch_dttguide.py
 
       - name: Commit and push data
         run: |
