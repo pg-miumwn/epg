@@ -15,7 +15,12 @@ def main():
 
     # Use undetected_chromedriver to avoid detection
     import undetected_chromedriver as uc
-    driver = uc.Chrome(options=options)
+
+    options = uc.ChromeOptions()
+    options.add_argument("--headless=new")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    
+    driver = uc.Chrome(options=options, use_subprocess=True)
 
     print("🌐 Visiting DTT Guide main page to pass IUAM...")
     driver.get("https://dttguide.nbtc.go.th/dttguide/")
