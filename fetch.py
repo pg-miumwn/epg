@@ -36,8 +36,19 @@ def main():
     options.add_argument("--window-size=1920,1080")
     
     try:
-        # Auto-detect Chrome version - no version_main parameter
-        driver = uc.Chrome(options=options)
+        # Get installed Chrome version
+        import subprocess
+        chrome_version_output = subprocess.check_output(
+            ["google-chrome", "--version"], 
+            stderr=subprocess.STDOUT
+        ).decode('utf-8')
+        
+        # Extract major version number (e.g., "Google Chrome 140.0.7339.185" -> 140)
+        version_main = int(chrome_version_output.split()[2].split('.')[0])
+        print(f"🔍 Detected Chrome version: {version_main}")
+        
+        # Launch with matching ChromeDriver version
+        driver = uc.Chrome(options=options, version_main=version_main)
         print("✅ Chrome driver launched successfully")
     except Exception as e:
         print("❌ FAILED to launch Chrome driver.")
