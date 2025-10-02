@@ -33,4 +33,4 @@ jobs:
       # Since uc uses Chrome, we need to ensure the environment has necessary libraries, 
       # which 'ubuntu-latest' usually handles, but sometimes additional libs are needed 
       # for a fully headless setup. uc is designed to handle this complexity better.
-      run: python your_script_name.py # Replace 'your_script_name.py' with your actual file name
+      run: python fetch.py # Replace 'your_script_name.py' with your actual file name
