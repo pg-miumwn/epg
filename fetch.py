@@ -62,11 +62,20 @@ def main():
         # --- RELIABLE WAIT FOR IUAM COMPLETION ---
         SUCCESS_PAGE_SELECTOR = (By.ID, "epg_list_container")
         
-        print("⏳ Waiting up to 30 seconds for IUAM challenge to complete...")
-        WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located(SUCCESS_PAGE_SELECTOR)
-        )
-        print("✅ IUAM Challenge successfully passed. Page is loaded.")
+        print("⏳ Waiting up to 60 seconds for IUAM challenge to complete...")
+        try:
+            WebDriverWait(driver, 60).until(
+                EC.presence_of_element_located(SUCCESS_PAGE_SELECTOR)
+            )
+            print("✅ IUAM Challenge successfully passed. Page is loaded.")
+        except Exception as timeout_error:
+            print("❌ Timeout waiting for page to load.")
+            print("📸 Taking screenshot for debugging...")
+            driver.save_screenshot("error_screenshot.png")
+            print("📄 Current page title:", driver.title)
+            print("🔗 Current URL:", driver.current_url)
+            print("📝 Page source preview:", driver.page_source[:500])
+            raise timeout_error
         
         # --- API CALL INSIDE BROWSER ---
         print("📡 Making API request inside browser...")
