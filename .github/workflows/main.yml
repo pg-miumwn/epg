@@ -1,15 +1,5 @@
-name: Scheduled Web Check
-
-on:
-  # Runs once a day at midnight UTC
-  schedule:
-    - cron: '0 17 * * 0,2,4,6'
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
 jobs:
   run_script:
-    # Use a standard Linux environment
     runs-on: ubuntu-latest
 
     steps:
@@ -17,23 +7,27 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Python
-      # Set up Python version 3.x
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
-    # ... (checkout and setup-python steps)
-
-    - name: Install Google Chrome Stable
-      # Use the 'apt-get' package manager to install the official Chrome package.
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y google-chrome-stable
+        # Keeping this at 3.11 to avoid the 'distutils' error
+        python-version: '3.11' 
         
+    - name: Install Google Chrome via Action 🚀
+      # 💥 CRITICAL CHANGE: Use the official action for better version management.
+      # This ensures a compatible, up-to-date version of Chrome is installed.
+      uses: browser-actions/setup-chrome@latest
+      # You can optionally specify a version, but 'latest' is usually best
+      # with uc to maximize compatibility.
+      # with:
+      #   chrome-version: 'stable' 
+
     - name: Install Python dependencies
-      # Ensure you are on Python 3.11 or installed 'setuptools' as discussed previously
       run: |
         python -m pip install --upgrade pip
+        # It's a good practice to explicitly reinstall undetected-chromedriver
+        # to force it to check for the matching ChromeDriver now that Chrome is installed.
         pip install -r requirements.txt
         
     - name: Run Python Script
+      # Make sure your fetch.py still includes the --headless and --no-sandbox arguments!
       run: python fetch.py
