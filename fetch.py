@@ -13,7 +13,7 @@ async def main():
         page = await context.new_page()
 
         print("🌐 Visiting DTT Guide main page to pass IUAM...")
-        await page.goto("https://dttguide.nbtc.go.th/dttguide/", wait_until="networkidle")
+        await page.goto("https://dttguide.nbtc.go.th/dttguide/", wait_until="domcontentloaded", timeout=60000)
 
         print("📡 Making API request...")
         result = await page.evaluate("""
