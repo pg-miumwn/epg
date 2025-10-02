@@ -2,139 +2,40 @@ import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
-import json
-import sys
-import os
 
-def main():
+def get_website_title(url):
     """
-    Launches an undetected Chrome browser, passes the IUAM challenge, 
-    makes an internal fetch request, and saves the filtered data to a JSON file.
+    Launches undetected_chromedriver, navigates to a URL, and prints the title.
+    Note: This code does NOT include functionality to bypass security measures.
     """
-    
-    options = uc.ChromeOptions()
-    
-    # Check if running in CI environment
-    is_ci = os.getenv('CI') == 'true' or os.getenv('GITHUB_ACTIONS') == 'true'
-    
-    # ALWAYS use headed mode (xvfb provides virtual display in CI)
-    options.headless = False
-    
-    if is_ci:
-        print("🤖 Running in CI mode with virtual display")
-    else:
-        print("💻 Running in local mode")
-    
-    # Standard anti-detection arguments
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    options.add_argument("--disable-web-security")
-    options.add_argument("--disable-features=IsolateOrigins,site-per-process")
-    options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
-    
-    # Additional preferences to avoid detection
-    prefs = {
-        "profile.default_content_setting_values.notifications": 2,
-        "credentials_enable_service": False,
-        "profile.password_manager_enabled": False
-    }
-    options.add_experimental_option("prefs", prefs)
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False)
-    
+    driver = None
     try:
-        # Get installed Chrome version
-        import subprocess
-        chrome_version_output = subprocess.check_output(
-            ["google-chrome", "--version"], 
-            stderr=subprocess.STDOUT
-        ).decode('utf-8')
+        # Initialize the undetected_chromedriver
+        options = uc.ChromeOptions()
+        # You can add options here, e.g., options.add_argument('--headless')
         
-        # Extract major version number (e.g., "Google Chrome 140.0.7339.185" -> 140)
-        version_main = int(chrome_version_output.split()[2].split('.')[0])
-        print(f"🔍 Detected Chrome version: {version_main}")
+        # uc.Chrome() will automatically download and manage the appropriate ChromeDriver
+        driver = uc.Chrome(options=options)
         
-        # Launch with matching ChromeDriver version
-        driver = uc.Chrome(options=options, version_main=version_main)
-        print("✅ Chrome driver launched successfully")
-    except Exception as e:
-        print("❌ FAILED to launch Chrome driver.")
-        print(f"Error: {e}")
-        sys.exit(1)
-    
-    try:
-        print("🌐 Visiting DTT Guide main page to pass IUAM...")
-        driver.get("https://dttguide.nbtc.go.th/dttguide/")
+        print(f"Attempting to access: {url}")
+        driver.get(url)
         
-        # Give extra time for Cloudflare challenge to process
-        print("⏸️  Waiting 15 seconds for Cloudflare challenge...")
-        time.sleep(15)
+        # Wait for the title to be present (basic example wait)
+        WebDriverWait(driver, 10).until(EC.title_is(driver.title))
         
-        # --- RELIABLE WAIT FOR IUAM COMPLETION ---
-        SUCCESS_PAGE_SELECTOR = (By.ID, "epg_list_container")
-        
-        print("⏳ Waiting up to 60 seconds for page content to load...")
-        try:
-            WebDriverWait(driver, 60).until(
-                EC.presence_of_element_located(SUCCESS_PAGE_SELECTOR)
-            )
-            print("✅ IUAM Challenge successfully passed. Page is loaded.")
-        except Exception as timeout_error:
-            print("❌ Timeout waiting for page to load.")
-            print("📸 Taking screenshot for debugging...")
-            driver.save_screenshot("error_screenshot.png")
-            print("📄 Current page title:", driver.title)
-            print("🔗 Current URL:", driver.current_url)
-            print("📝 Page source preview:", driver.page_source[:500])
-            raise timeout_error
-        
-        # --- API CALL INSIDE BROWSER ---
-        print("📡 Making API request inside browser...")
-        script = """
-        return fetch("https://dttguide.nbtc.go.th/BcsEpgDataServices/BcsEpgDataController/getProgramDataWeb", {
-            method: "POST",
-            headers: {
-                "Accept": "*/*",
-                "Content-Type": "application/json; charset=UTF-8"
-            },
-            body: JSON.stringify({"channelType":"1"})
-        }).then(res => res.text());
-        """
-        
-        result = driver.execute_script(script)
-        
-        # --- DATA PROCESSING ---
-        try:
-            data = json.loads(result)
-        except json.JSONDecodeError as e:
-            print(f"❌ Failed to parse JSON: {e}")
-            print("Raw response:", result[:500] + "...")
-            driver.quit()
-            sys.exit(1)
-        
-        # Filter data for the specified channel numbers
-        channel_targets = [33, 31, 35, 25]
-        filtered = [
-            x for x in data.get("results", []) 
-            if int(x.get("channelNo", 0)) in channel_targets
-        ]
-        
-        # --- SAVE DATA ---
-        with open("data.json", "w", encoding="utf-8") as f:
-            json.dump(filtered, f, ensure_ascii=False, indent=2)
-        
-        print(f"✅ Data for channels {channel_targets} saved to data.json")
-        print(f"📊 Retrieved {len(filtered)} channel records")
+        # Log the title
+        title = driver.title
+        print(f"Successfully accessed. Website Title: '{title}'")
         
     except Exception as e:
-        print(f"❌ Error during execution: {e}")
-        sys.exit(1)
+        print(f"An error occurred: {e}")
     finally:
-        driver.quit()
+        if driver:
+            # Always close the browser when done
+            driver.quit()
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    target_url = "https://dttguide.nbtc.go.th/dttguide/"
+    get_website_title(target_url)
+
+# This code is for educational and ethical purposes only.
