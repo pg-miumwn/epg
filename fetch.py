@@ -4,26 +4,32 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 def get_website_title(url):
-    """
-    Launches undetected_chromedriver, navigates to a URL, and prints the title.
-    Note: This code does NOT include functionality to bypass security measures.
-    """
     driver = None
     try:
         # Initialize the undetected_chromedriver
         options = uc.ChromeOptions()
-        # You can add options here, e.g., options.add_argument('--headless')
         
-        # uc.Chrome() will automatically download and manage the appropriate ChromeDriver
+        # --- CRITICAL FIXES FOR CI/CD ---
+        # 1. Enable headless mode (required for servers/CI runners)
+        options.add_argument('--headless=new') # Use 'new' for modern Chrome
+        
+        # 2. Disable sandbox (often required in Linux CI environments)
+        options.add_argument('--no-sandbox') 
+        
+        # 3. Disable shared memory (fixes issues in some environments)
+        options.add_argument('--disable-dev-shm-usage')
+        
+        # 4. Add a dummy window size (often required with headless)
+        options.add_argument('--window-size=1920,1080')
+        # -------------------------------
+        
         driver = uc.Chrome(options=options)
         
         print(f"Attempting to access: {url}")
         driver.get(url)
         
-        # Wait for the title to be present (basic example wait)
+        # ... rest of your code to log title
         WebDriverWait(driver, 10).until(EC.title_is(driver.title))
-        
-        # Log the title
         title = driver.title
         print(f"Successfully accessed. Website Title: '{title}'")
         
@@ -31,7 +37,6 @@ def get_website_title(url):
         print(f"An error occurred: {e}")
     finally:
         if driver:
-            # Always close the browser when done
             driver.quit()
 
 if __name__ == '__main__':
