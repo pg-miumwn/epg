@@ -21,15 +21,17 @@ jobs:
         # Keeping this at 3.11 to avoid the 'distutils' error
         python-version: '3.11' 
         
-    - name: Install Google Chrome via Action 🚀
-      # 💥 CRITICAL CHANGE: Use the official action for better version management.
-      # This ensures a compatible, up-to-date version of Chrome is installed.
+    - name: Install Google Chrome via Action
       uses: browser-actions/setup-chrome@latest
-      # You can optionally specify a version, but 'latest' is usually best
-      # with uc to maximize compatibility.
-      # with:
-      #   chrome-version: 'stable' 
+      id: setup_chrome # Add an ID to reference this step
 
+    - name: Set Chrome Executable Path 🛠️
+      # Based on the log, we set the path variable.
+      # Note: This path may change slightly, but it's the best guess.
+      run: |
+        CHROME_PATH="/opt/hostedtoolcache/setup-chrome/chrome/stable/x64/chrome"
+        echo "CHROME_BIN=$CHROME_PATH" >> $GITHUB_ENV
+        
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
