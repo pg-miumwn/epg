@@ -6,9 +6,6 @@ on:
     - cron: '0 17 * * 0,2,4,6'
   # Allows manual running from the Actions tab
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   fetch-data:
@@ -69,8 +66,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fetched-data-${{ github.run_number }}
-          path: data.json
+          path: |
+            data.json
+            error_screenshot.png
           retention-days: 30
+          if-no-files-found: ignore
       
       - name: Summary
         if: always()
