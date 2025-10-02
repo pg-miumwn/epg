@@ -18,15 +18,13 @@ def main():
     # Check if running in CI environment
     is_ci = os.getenv('CI') == 'true' or os.getenv('GITHUB_ACTIONS') == 'true'
     
+    # ALWAYS use headed mode (xvfb provides virtual display in CI)
+    options.headless = False
+    
     if is_ci:
-        # CI environment - use headless mode
-        options.headless = True
-        options.add_argument("--headless=new")
-        print("🤖 Running in CI mode (headless)")
+        print("🤖 Running in CI mode with virtual display")
     else:
-        # Local environment - use headful mode
-        options.headless = False
-        print("💻 Running in local mode (headful)")
+        print("💻 Running in local mode")
     
     # Standard anti-detection arguments
     options.add_argument("--disable-blink-features=AutomationControlled")
@@ -34,6 +32,19 @@ def main():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
+    options.add_argument("--disable-web-security")
+    options.add_argument("--disable-features=IsolateOrigins,site-per-process")
+    options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
+    
+    # Additional preferences to avoid detection
+    prefs = {
+        "profile.default_content_setting_values.notifications": 2,
+        "credentials_enable_service": False,
+        "profile.password_manager_enabled": False
+    }
+    options.add_experimental_option("prefs", prefs)
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
     
     try:
         # Get installed Chrome version
@@ -59,10 +70,14 @@ def main():
         print("🌐 Visiting DTT Guide main page to pass IUAM...")
         driver.get("https://dttguide.nbtc.go.th/dttguide/")
         
+        # Give extra time for Cloudflare challenge to process
+        print("⏸️  Waiting 15 seconds for Cloudflare challenge...")
+        time.sleep(15)
+        
         # --- RELIABLE WAIT FOR IUAM COMPLETION ---
         SUCCESS_PAGE_SELECTOR = (By.ID, "epg_list_container")
         
-        print("⏳ Waiting up to 60 seconds for IUAM challenge to complete...")
+        print("⏳ Waiting up to 60 seconds for page content to load...")
         try:
             WebDriverWait(driver, 60).until(
                 EC.presence_of_element_located(SUCCESS_PAGE_SELECTOR)
