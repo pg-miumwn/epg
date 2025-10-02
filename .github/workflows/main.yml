@@ -2,7 +2,7 @@ name: Fetch Data Weekly
 
 on:
   schedule:
-    - cron: '0 17 * * 0,2,4,6'  # Runs at 17:00 UTC every Sun, Tue, Thu, Sat
+    - cron: '0 17 * * 0,2,4,6' # Runs at 17:00 UTC every Sun, Tue, Thu, Sat
   workflow_dispatch:
 
 jobs:
@@ -13,49 +13,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Fetch data using curl and filter with jq
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
         run: |
-          echo "📡 Running curl request..."
-          
-          # Save raw curl output for debugging
-          curl 'https://dttguide.nbtc.go.th/BcsEpgDataServices/BcsEpgDataController/getProgramDataWeb' \
-            -H 'accept: */*' \
-            -H 'accept-language: en,th;q=0.9,en-US;q=0.8' \
-            -H 'content-type: application/json; charset=UTF-8' \
-            -b 'BIGipServerPool_Port_80=2705199532.20480.0000' \
-            -H 'origin: https://dttguide.nbtc.go.th' \
-            -H 'priority: u=1, i' \
-            -H 'referer: https://dttguide.nbtc.go.th/dttguide/' \
-            -H 'sec-ch-ua: "Chromium";v="140", "Not=A?Brand";v="24", "Microsoft Edge";v="140"' \
-            -H 'sec-ch-ua-mobile: ?0' \
-            -H 'sec-ch-ua-platform: "Windows"' \
-            -H 'sec-fetch-dest: empty' \
-            -H 'sec-fetch-mode: cors' \
-            -H 'sec-fetch-site: same-origin' \
-            -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0' \
-            --data-raw '{"channelType":"1"}' \
-            -o raw_output.json \
-            -w "\nStatus Code: %{http_code}\n"
+          python -m pip install --upgrade pip
+          pip install playwright
+          playwright install
 
-          echo "📂 Raw curl output saved to raw_output.json"
-          cat raw_output.json
-
-          echo "🔍 Filtering with jq..."
-          cat raw_output.json | \
-          jq -c '[.results[] | select(.channelNo | tonumber == 33 or tonumber == 31 or tonumber == 35 or tonumber == 25)]' > data.json
+      - name: Run fetch script
+        run: |
+          python fetch.py
 
       - name: Commit and push data
-        id: commit
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
           git add data.json
           if git diff --cached --quiet; then
-            echo "skip_deploy=true" >> $GITHUB_STATE
+            echo "No changes to commit"
           else
-            git commit -m "[BOT] Every other day data fetch: at $(date +'%Y-%m-%d %H:%M')"
+            git commit -m "[BOT] Fetched DTT Guide data at $(date +'%Y-%m-%d %H:%M')"
             git push
-            echo "skip_deploy=false" >> $GITHUB_STATE
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
