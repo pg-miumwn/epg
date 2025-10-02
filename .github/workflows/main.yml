@@ -21,16 +21,19 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+    # ... (checkout and setup-python steps)
 
-    - name: Install dependencies
-      # Install the required packages
+    - name: Install Google Chrome Stable
+      # Use the 'apt-get' package manager to install the official Chrome package.
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+        
+    - name: Install Python dependencies
+      # Ensure you are on Python 3.11 or installed 'setuptools' as discussed previously
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
     - name: Run Python Script
-      # Execute the Python script
-      # Since uc uses Chrome, we need to ensure the environment has necessary libraries, 
-      # which 'ubuntu-latest' usually handles, but sometimes additional libs are needed 
-      # for a fully headless setup. uc is designed to handle this complexity better.
-      run: python fetch.py # Replace 'your_script_name.py' with your actual file name
+      run: python fetch.py
