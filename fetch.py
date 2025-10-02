@@ -14,7 +14,7 @@ def main():
     options.add_argument("--window-size=1920,1080")
 
     # Use undetected_chromedriver to avoid detection
-    import undetected_chromedriver.v2 as uc
+    import undetected_chromedriver as uc
     driver = uc.Chrome(options=options)
 
     print("🌐 Visiting DTT Guide main page to pass IUAM...")
