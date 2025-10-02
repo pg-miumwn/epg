@@ -2,7 +2,7 @@ name: Fetch Data Weekly
 
 on:
   schedule:
-    - cron: '0 17 * * 0,2,4,6'  # Runs every day at 12:00 AM
+    - cron: '0 17 * * 0,2,4,6'  # Runs at 17:00 UTC every Sun, Tue, Thu, Sat
   workflow_dispatch:
 
 jobs:
@@ -15,6 +15,9 @@ jobs:
 
       - name: Fetch data using curl and filter with jq
         run: |
+          echo "📡 Running curl request..."
+          
+          # Save raw curl output for debugging
           curl 'https://dttguide.nbtc.go.th/BcsEpgDataServices/BcsEpgDataController/getProgramDataWeb' \
             -H 'accept: */*' \
             -H 'accept-language: en,th;q=0.9,en-US;q=0.8' \
@@ -30,7 +33,15 @@ jobs:
             -H 'sec-fetch-mode: cors' \
             -H 'sec-fetch-site: same-origin' \
             -H 'user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0' \
-            --data-raw '{"channelType":"1"}' | \
+            --data-raw '{"channelType":"1"}' \
+            -o raw_output.json \
+            -w "\nStatus Code: %{http_code}\n"
+
+          echo "📂 Raw curl output saved to raw_output.json"
+          cat raw_output.json
+
+          echo "🔍 Filtering with jq..."
+          cat raw_output.json | \
           jq -c '[.results[] | select(.channelNo | tonumber == 33 or tonumber == 31 or tonumber == 35 or tonumber == 25)]' > data.json
 
       - name: Commit and push data
@@ -42,7 +53,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "skip_deploy=true" >> $GITHUB_STATE
           else
-            git commit -m "[BOT]Every other day data fetch: at $(date +'%Y-%m-%d %H:%M')"
+            git commit -m "[BOT] Every other day data fetch: at $(date +'%Y-%m-%d %H:%M')"
             git push
             echo "skip_deploy=false" >> $GITHUB_STATE
           fi
