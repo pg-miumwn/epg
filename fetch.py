@@ -1,42 +1,56 @@
-import asyncio
 import json
-from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
-async def main():
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+def main():
+    options = Options()
+    options.add_argument("--headless=new")  # headless mode
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--window-size=1920,1080")
 
-        # Apply stealth techniques
-        await stealth_async(page)
+    # Use undetected_chromedriver to avoid detection
+    import undetected_chromedriver.v2 as uc
+    driver = uc.Chrome(options=options)
 
-        print("🌐 Visiting DTT Guide main page to pass IUAM...")
-        await page.goto("https://dttguide.nbtc.go.th/dttguide/", wait_until="networkidle")
+    print("🌐 Visiting DTT Guide main page to pass IUAM...")
+    driver.get("https://dttguide.nbtc.go.th/dttguide/")
 
-        print("📡 Making API request...")
-        response = await page.evaluate("""
-            async () => {
-                const res = await fetch('https://dttguide.nbtc.go.th/BcsEpgDataServices/BcsEpgDataController/getProgramDataWeb', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ "channelType": "1" })
-                });
-                return await res.json();
-            }
-        """)
+    print("⏳ Waiting for IUAM challenge to complete...")
+    time.sleep(10)  # wait for Cloudflare IUAM to finish
 
-        # Filter and save the data
-        filtered_data = [
-            item for item in response['results']
-            if item['channelNo'] in ['33', '31', '35', '25']
-        ]
-        with open('data.json', 'w', encoding='utf-8') as f:
-            json.dump(filtered_data, f, ensure_ascii=False, indent=4)
+    print("📡 Making API request inside browser...")
+    script = """
+        return fetch('https://dttguide.nbtc.go.th/BcsEpgDataServices/BcsEpgDataController/getProgramDataWeb', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'accept': '*/*',
+                'accept-language': 'en,th;q=0.9,en-US;q=0.8',
+                'origin': 'https://dttguide.nbtc.go.th',
+                'referer': 'https://dttguide.nbtc.go.th/dttguide/'
+            },
+            body: JSON.stringify({ channelType: "1" })
+        }).then(res => res.json());
+    """
+    result = driver.execute_script(script)
 
-        await browser.close()
+    driver.quit()
+
+    print("💾 Filtering channels...")
+    filtered = [
+        item for item in result.get("results", [])
+        if int(item.get("channelNo", "0")) in {33, 31, 35, 25}
+    ]
+
+    with open("data.json", "w", encoding="utf-8") as f:
+        json.dump(filtered, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ Saved {len(filtered)} channels to data.json")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
