@@ -1,8 +1,10 @@
-name: Fetch DTT Guide Weekly
+name: Fetch Data Weekly
 
 on:
+  # Runs Sunday, Tuesday, Thursday, Saturday at 17:00 UTC (12:00 PM EST, or adjust to your local timezone)
   schedule:
-    - cron: '0 17 * * 0,2,4,6' # Runs at 17:00 UTC every Sun, Tue, Thu, Sat
+    - cron: '0 17 * * 0,2,4,6'
+  # Allows manual running from the Actions tab
   workflow_dispatch:
 
 jobs:
@@ -10,33 +12,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout repository code
+        uses: actions/checkout@v4 # Use the latest version
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: 3.11
+
+      - name: Install Google Chrome 🌐
+        # undetected-chromedriver requires the actual Chrome browser to be installed
+        run: |
+          sudo apt-get update
+          # Install the latest stable version of Chrome
+          sudo apt-get install -y google-chrome-stable
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install undetected-chromedriver selenium
 
-      - name: Run fetch script
-        run: |
-          python fetch.py
+      - name: Run fetch script 🏃
+        # This will execute fetch.py and generate data.json
+        run: python fetch.py
 
-      - name: Commit and push data
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add data.json
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "[BOT] Selenium fetch at $(date +'%Y-%m-%d %H:%M')"
-            git push
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and push data 💾
+        # Use stefanzweifel/git-auto-commit-action for reliable and permissioned pushing.
+        # This action handles git setup and push permissions using GITHUB_TOKEN automatically.
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "[BOT] Data fetched at $(date +'%Y-%m-%d %H:%M')"
+          # Only commit if data.json was actually changed
+          files: data.json
+          # You can customize the user info
+          commit_user_name: GitHub Actions Bot
+          commit_user_email: actions@github.com
